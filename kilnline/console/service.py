@@ -735,7 +735,7 @@ class ControlService:
         if clear_alarms:
             for code in self.alarms.active_codes():
                 self.alarms.clear(code, at=now)
-        result = self.ignition.recover(at=now, now=self._mono(), alarm_reset=alarm_reset)
+        result = self.ignition.recover(at=self._mono(), now=self._mono(), alarm_reset=alarm_reset)
         if result["released"]:
             self.recovery.complete("latch_release", at=now)
             self.recovery.complete("burner_recovery", at=now)

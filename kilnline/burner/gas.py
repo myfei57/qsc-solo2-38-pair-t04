@@ -86,6 +86,7 @@ class GasTrain:
 
     def open(self, *, at: float) -> dict[str, Any]:
         self._latches.require_clear(self._latch_name)
+        self._gates.require(self._air_gate)
         if self._is_open:
             raise StateConflict("gas valve train is already open", at=float(at))
         self._is_open = True

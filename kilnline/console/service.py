@@ -718,7 +718,7 @@ class ControlService:
 
     def burner_flame_lost(self, *, reason: str = "flame_proof_lost") -> dict[str, Any]:
         at = self._now()
-        result = self.ignition.flame_lost(at=at, reason=reason)
+        result = self.ignition.flame_lost(at=self._mono(), reason=reason)
         self.alarms.raise_alarm(ALARM_FLAME_LOST, reason, at=at, severity="critical", source="burner")
         if self.roller.running:
             self.roller.stop(at=at, reason="flame_lost")
@@ -728,6 +728,7 @@ class ControlService:
         """Alarm reset, then latch release, then the burner train is ready again."""
 
         now = self._now()
+        mono = self._mono()
         if self.recovery.is_complete("alarm_reset"):
             self.recovery.reset(at=now, reason="recovery_restarted")
         if alarm_reset:
@@ -735,7 +736,7 @@ class ControlService:
         if clear_alarms:
             for code in self.alarms.active_codes():
                 self.alarms.clear(code, at=now)
-        result = self.ignition.recover(at=now, now=self._mono(), alarm_reset=alarm_reset)
+        result = self.ignition.recover(at=mono, now=mono, alarm_reset=alarm_reset)
         if result["released"]:
             self.recovery.complete("latch_release", at=now)
             self.recovery.complete("burner_recovery", at=now)

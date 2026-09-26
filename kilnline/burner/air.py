@@ -78,7 +78,7 @@ class CombustionAirTrain:
 
     @property
     def established(self) -> bool:
-        return self._running
+        return self._running and self._pressure_kpa >= self._min_pressure
 
     def start(self, *, at: float) -> dict[str, Any]:
         self._latches.require_clear(self._latch_name)
@@ -87,7 +87,6 @@ class CombustionAirTrain:
         self._running = True
         self._started_at = float(at)
         self._pressure_kpa = 0.0
-        self._gates.satisfy(self._gate_name, at=at, detail="air train running")
         return self.snapshot()
 
     def stop(self, *, at: float) -> dict[str, Any]:
@@ -110,6 +109,12 @@ class CombustionAirTrain:
         if not self._running:
             return self._pressure_kpa
         self._pressure_kpa = min(self._max_pressure, self._pressure_kpa + self._ramp_kpa_per_s * step)
+        if self.established and not self._gates.satisfies(self._gate_name):
+            self._gates.satisfy(
+                self._gate_name,
+                at=at,
+                detail=f"pressure {self._pressure_kpa:.2f} kPa",
+            )
         return self._pressure_kpa
 
     def require_established(self) -> None:
